@@ -1,1 +1,1 @@
-pub mod site;
+pub mod schedule;
