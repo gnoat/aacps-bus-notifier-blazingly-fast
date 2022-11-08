@@ -113,13 +113,16 @@ fn schedule_parsing() {
     assert_eq!(
         schedule.current_schedule,
         vec![vec![
-            "94".to_string(),
-            "".to_string(),
-            "PM".to_string(),
-            "JONES ES, SEVERNA PARK MS".to_string(),
-            "No Service".to_string(),
-            "Sin Servicio".to_string()
-        ]]
+            "94",
+            "",
+            "PM",
+            "JONES ES, SEVERNA PARK MS",
+            "No Service",
+            "Sin Servicio"
+        ]
+        .into_iter()
+        .map(|s| s.to_string())
+        .collect::<Vec<String>>()]
         .into_iter()
         .collect::<HashSet<Vec<String>>>()
     );
