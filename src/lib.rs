@@ -1,2 +1,2 @@
-pub mod schedule;
 pub mod configs;
+pub mod schedule;

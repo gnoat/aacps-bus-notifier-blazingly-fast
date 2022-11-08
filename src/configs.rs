@@ -1,10 +1,10 @@
 use serde_derive::Deserialize;
-use toml;
 use std::fs;
+use toml;
 
 #[derive(Deserialize)]
 pub struct Configs {
-   pub schedule_url: String,
+    pub schedule_url: String,
 }
 
 impl Configs {
@@ -15,4 +15,3 @@ impl Configs {
         config
     }
 }
-

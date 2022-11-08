@@ -7,7 +7,7 @@ pub struct BusInfo {
     pub previous_schedule: Option<HashSet<Vec<String>>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum BusInfoWebsite {
     Url(String),
     Text(String),
@@ -18,7 +18,7 @@ impl BusInfo {
         // Read bus schedule from website and extract schedule deficiencies
         let bus_schedule_text = match schedule_info {
             BusInfoWebsite::Url(ref url) => Self::request_schedule(&url).to_string(),
-            BusInfoWebsite::Text(ref text) => text.to_string()
+            BusInfoWebsite::Text(ref text) => text.to_string(),
         };
         let schedule_vec = Self::extract_schedule(bus_schedule_text);
 
@@ -29,11 +29,11 @@ impl BusInfo {
         }
     }
 
-    pub fn update(&self) -> Self {
+    pub fn update(&self, schedule_info: BusInfoWebsite) -> Self {
         // Generate a new BusInfo struct that has updated info and current info
-        let current_schedule_text = match &self.schedule_info {
-            BusInfoWebsite::Text(s) => s.to_string(),
-            BusInfoWebsite::Url(url) => Self::request_schedule(&url).to_string()
+        let current_schedule_text = match schedule_info {
+            BusInfoWebsite::Text(ref s) => s.to_string(),
+            BusInfoWebsite::Url(ref url) => Self::request_schedule(&url).to_string(),
         };
         BusInfo {
             schedule_info: self.schedule_info.clone(),
@@ -53,15 +53,15 @@ impl BusInfo {
         // Read the schedule table column order from the returned HTML
         let columns_vec: Vec<String> = Regex::new(r#"\{\s*"title":\s*"([a-zA-Z\s]+)"\s*}"#)
             .unwrap()
-            .captures_iter( 
+            .captures_iter(
                 &Regex::new(r"columns: \[((\n|.)*)\s*\]\s*}\);")
-                .unwrap()
-                .captures(&site_text.as_ref())
-                .unwrap()
-                .get(1)
-                .unwrap()
-                .as_str()
-                .trim()
+                    .unwrap()
+                    .captures(&site_text.as_ref())
+                    .unwrap()
+                    .get(1)
+                    .unwrap()
+                    .as_str()
+                    .trim(),
             )
             .map(|s| s.get(1).unwrap().as_str().to_string())
             .collect();
@@ -135,22 +135,40 @@ impl BusInfo {
 
     pub fn diff(&self) -> BusInfoDiff {
         match &self.previous_schedule {
-            None => if self.current_schedule.is_empty() {
-                BusInfoDiff { new: None, updated: None, now_running: None }
-            } else {
-                BusInfoDiff { new: Some(self.current_schedule.clone()), updated: None, now_running: None }
-            },
-            Some(prev) => if self.current_schedule.is_empty() {
-                BusInfoDiff { new: None, updated: None, now_running: Some(prev.clone()) }
-            } else {
-                BusInfoDiff::new(self.current_schedule.clone(), self.previous_schedule.clone().unwrap())
+            None => {
+                if self.current_schedule.is_empty() {
+                    BusInfoDiff {
+                        new: None,
+                        updated: None,
+                        now_running: None,
+                    }
+                } else {
+                    BusInfoDiff {
+                        new: Some(self.current_schedule.clone()),
+                        updated: None,
+                        now_running: None,
+                    }
+                }
+            }
+            Some(prev) => {
+                if self.current_schedule.is_empty() {
+                    BusInfoDiff {
+                        new: None,
+                        updated: None,
+                        now_running: Some(prev.clone()),
+                    }
+                } else {
+                    BusInfoDiff::new(
+                        self.current_schedule.clone(),
+                        self.previous_schedule.clone().unwrap(),
+                    )
+                }
             }
         }
     }
-
-    
 }
 
+#[derive(Debug)]
 pub struct BusInfoDiff {
     pub new: Option<HashSet<Vec<String>>>,
     pub updated: Option<HashSet<Vec<String>>>,
@@ -159,30 +177,44 @@ pub struct BusInfoDiff {
 
 impl BusInfoDiff {
     pub fn new(left: HashSet<Vec<String>>, right: HashSet<Vec<String>>) -> Self {
-            let mut new: HashSet<Vec<String>> = HashSet::new();
-            let mut updated: HashSet<Vec<String>> = HashSet::new();
-            let mut now_running: HashSet<Vec<String>> = HashSet::new();
+        let mut new: HashSet<Vec<String>> = HashSet::new();
+        let mut updated: HashSet<Vec<String>> = HashSet::new();
+        let mut now_running: HashSet<Vec<String>> = HashSet::new();
 
-            for l_row in left.iter() {
-                let r_filtered = right.iter().filter(|v| (l_row[0] == v[0]) && (l_row[3] == v[3])).next();
-                match r_filtered {
-                    Some(v) => {
-                        if (l_row[1] != v[1]) || (l_row[2] != v[2]) || (l_row[4] != v[4]) {
-                            updated.insert(v.to_vec());
-                        }
-                    },
-                    None => { new.insert(l_row.to_vec()); }
+        for l_row in left.iter() {
+            let r_filtered = right
+                .iter()
+                .filter(|v| (l_row[0] == v[0]) && (l_row[3] == v[3]))
+                .next();
+            match r_filtered {
+                Some(v) => {
+                    if (l_row[1] != v[1]) || (l_row[2] != v[2]) || (l_row[4] != v[4]) {
+                        updated.insert(v.to_vec());
+                    }
+                }
+                None => {
+                    new.insert(l_row.to_vec());
                 }
             }
+        }
 
-            for r_row in right.iter() {
-                let l_filtered = left.iter().filter(|v| (r_row[0] == v[0]) && (r_row[3] == v[3])).next();
-                match l_filtered {
-                    Some(_) => {},
-                    None => { now_running.insert(r_row.to_vec()); }
+        for r_row in right.iter() {
+            let l_filtered = left
+                .iter()
+                .filter(|v| (r_row[0] == v[0]) && (r_row[3] == v[3]))
+                .next();
+            match l_filtered {
+                Some(_) => {}
+                None => {
+                    now_running.insert(r_row.to_vec());
                 }
             }
-            BusInfoDiff { new: Some(new), updated: Some(updated), now_running: Some(now_running) }
+        }
+        BusInfoDiff {
+            new: Some(new),
+            updated: Some(updated),
+            now_running: Some(now_running),
+        }
     }
 }
 

@@ -6,4 +6,3 @@ fn main() {
     let bus_url = schedule::BusInfoWebsite::Url(configs.schedule_url);
     let _bus_info = schedule::BusInfo::new(bus_url);
 }
-
