@@ -67,30 +67,22 @@ impl BusInfo {
             .collect();
 
         // Find the index of each expected column
-        let bus_idx = columns_vec
-            .iter()
-            .position(|s| s == "Bus")
-            .expect("Missing column name");
-        let sub_idx = columns_vec
-            .iter()
-            .position(|s| s == "Sub Bus")
-            .expect("Missing column name");
-        let schedules_idx = columns_vec
-            .iter()
-            .position(|s| s == "Schedules")
-            .expect("Missing column name");
-        let schools_idx = columns_vec
-            .iter()
-            .position(|s| s == "Schools")
-            .expect("Missing column name");
-        let impact_idx = columns_vec
-            .iter()
-            .position(|s| s == "Impact")
-            .expect("Missing column name");
-        let impacto_idx = columns_vec
-            .iter()
-            .position(|s| s == "Impacto")
-            .expect("Missing column name");
+        let columns = vec![
+            "Bus",
+            "Sub Bus",
+            "Schedules",
+            "Schools",
+            "Impact",
+            "Impacto",
+        ]
+        .into_iter()
+        .map(|c| {
+            columns_vec
+                .iter()
+                .position(|s| s == c)
+                .expect("Missing column")
+        })
+        .collect::<Vec<usize>>();
 
         // Capture rows from schedule table and put them in the expected order
         // Columns should always be ordered as:
@@ -117,14 +109,11 @@ impl BusInfo {
                     .collect::<Vec<String>>()
             })
             .map(|col| {
-                vec![
-                    col.get(bus_idx).unwrap_or(&"".to_string()).to_owned(),
-                    col.get(sub_idx).unwrap_or(&"".to_string()).to_owned(),
-                    col.get(schedules_idx).unwrap_or(&"".to_string()).to_owned(),
-                    col.get(schools_idx).unwrap_or(&"".to_string()).to_owned(),
-                    col.get(impact_idx).unwrap_or(&"".to_string()).to_owned(),
-                    col.get(impacto_idx).unwrap_or(&"".to_string()).to_owned(),
-                ]
+                columns
+                    .clone()
+                    .into_iter()
+                    .map(|idx| col.get(idx).unwrap_or(&"".to_string()).to_owned())
+                    .collect::<Vec<String>>()
             })
             .filter(|v| !v[0].is_empty() && !v[3].is_empty())
             .collect();
