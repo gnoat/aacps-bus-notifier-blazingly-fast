@@ -2,19 +2,28 @@ use regex::Regex;
 use std::collections::HashSet;
 
 pub struct BusInfo {
-    pub schedule_url: String,
+    pub schedule_info: RawInfo,
     pub current_schedule: HashSet<Vec<String>>,
     pub previous_schedule: Option<HashSet<Vec<String>>>,
 }
 
+#[derive(Clone)]
+pub enum RawInfo {
+    Url(String),
+    Text(String),
+}
+
 impl BusInfo {
-    pub fn new(bus_schedule_url: String) -> Self {
+    pub fn new(schedule_info: RawInfo) -> Self {
         // Read bus schedule from website and extract schedule deficiencies
-        let bus_schedule_text = Self::request_schedule(&bus_schedule_url);
+        let bus_schedule_text = match schedule_info {
+            RawInfo::Url(ref url) => Self::request_schedule(&url).to_string(),
+            RawInfo::Text(ref text) => text.to_string()
+        };
         let schedule_vec = Self::extract_schedule(bus_schedule_text);
 
         BusInfo {
-            schedule_url: bus_schedule_url,
+            schedule_info: schedule_info.clone(),
             current_schedule: schedule_vec,
             previous_schedule: None,
         }
@@ -22,9 +31,13 @@ impl BusInfo {
 
     pub fn update(&self) -> Self {
         // Generate a new BusInfo struct that has updated info and current info
+        let current_schedule_text = match &self.schedule_info {
+            RawInfo::Text(s) => s.to_string(),
+            RawInfo::Url(url) => Self::request_schedule(&url).to_string()
+        };
         BusInfo {
-            schedule_url: self.schedule_url.clone(),
-            current_schedule: Self::extract_schedule(&self.schedule_url),
+            schedule_info: self.schedule_info.clone(),
+            current_schedule: Self::extract_schedule(&current_schedule_text),
             previous_schedule: Some(self.current_schedule.clone()),
         }
     }
