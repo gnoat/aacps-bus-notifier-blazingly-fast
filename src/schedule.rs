@@ -2,23 +2,23 @@ use regex::Regex;
 use std::collections::HashSet;
 
 pub struct BusInfo {
-    pub schedule_info: RawInfo,
+    pub schedule_info: BusInfoWebsite,
     pub current_schedule: HashSet<Vec<String>>,
     pub previous_schedule: Option<HashSet<Vec<String>>>,
 }
 
 #[derive(Clone)]
-pub enum RawInfo {
+pub enum BusInfoWebsite {
     Url(String),
     Text(String),
 }
 
 impl BusInfo {
-    pub fn new(schedule_info: RawInfo) -> Self {
+    pub fn new(schedule_info: BusInfoWebsite) -> Self {
         // Read bus schedule from website and extract schedule deficiencies
         let bus_schedule_text = match schedule_info {
-            RawInfo::Url(ref url) => Self::request_schedule(&url).to_string(),
-            RawInfo::Text(ref text) => text.to_string()
+            BusInfoWebsite::Url(ref url) => Self::request_schedule(&url).to_string(),
+            BusInfoWebsite::Text(ref text) => text.to_string()
         };
         let schedule_vec = Self::extract_schedule(bus_schedule_text);
 
@@ -32,8 +32,8 @@ impl BusInfo {
     pub fn update(&self) -> Self {
         // Generate a new BusInfo struct that has updated info and current info
         let current_schedule_text = match &self.schedule_info {
-            RawInfo::Text(s) => s.to_string(),
-            RawInfo::Url(url) => Self::request_schedule(&url).to_string()
+            BusInfoWebsite::Text(s) => s.to_string(),
+            BusInfoWebsite::Url(url) => Self::request_schedule(&url).to_string()
         };
         BusInfo {
             schedule_info: self.schedule_info.clone(),
