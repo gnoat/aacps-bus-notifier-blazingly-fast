@@ -1,20 +1,49 @@
 use regex::Regex;
-// use std::fs::OpenOptions;
+use std::collections::HashSet;
 
 pub struct BusInfo {
-    pub current_schedule: Vec<Vec<String>>,
-    pub previous_schedule: Option<Vec<Vec<String>>>,
+    pub schedule_url: String,
+    pub current_schedule: HashSet<Vec<String>>,
+    pub previous_schedule: Option<HashSet<Vec<String>>>,
 }
 
 impl BusInfo {
-    pub fn new(bus_site_body: String) -> Self {
+    pub fn new(bus_schedule_url: String) -> Self {
+        // Read bus schedule from website and extract schedule deficiencies
+        let bus_schedule_text = Self::request_schedule(&bus_schedule_url);
+        let schedule_vec = Self::extract_schedule(bus_schedule_text);
+
+        BusInfo {
+            schedule_url: bus_schedule_url,
+            current_schedule: schedule_vec,
+            previous_schedule: None,
+        }
+    }
+
+    pub fn update(&self) -> Self {
+        // Generate a new BusInfo struct that has updated info and current info
+        BusInfo {
+            schedule_url: self.schedule_url.clone(),
+            current_schedule: Self::extract_schedule(&self.schedule_url),
+            previous_schedule: Some(self.current_schedule.clone()),
+        }
+    }
+
+    fn request_schedule(bus_schedule_url: &String) -> String {
+        reqwest::blocking::get(bus_schedule_url)
+            .unwrap()
+            .text()
+            .unwrap_or("".to_string())
+    }
+
+    fn extract_schedule<T: AsRef<str>>(site_text: T) -> HashSet<Vec<String>> {
         // Read the schedule table column order from the returned HTML
         let columns_vec: Vec<String> = Regex::new(r#"\{\s*"title":\s*"([a-zA-Z\s]+)"\s*}"#)
             .unwrap()
             .captures_iter( 
                 &Regex::new(r"columns: \[((\n|.)*)\s*\]\s*}\);")
                 .unwrap()
-                .captures(&bus_site_body)
+                .captures(&site_text.as_ref())
                 .unwrap()
                 .get(1)
                 .unwrap()
@@ -58,9 +87,9 @@ impl BusInfo {
         //     4) Schools
         //     5) Impact
         //     6) Impacto
-        let schedule_vec: Vec<Vec<String>> = Regex::new(r"var dataArray =\s*\[(.*)\];")
+        let schedule_vec: HashSet<Vec<String>> = Regex::new(r"var dataArray =\s*\[(.*)\];")
             .unwrap()
-            .captures(&bus_site_body)
+            .captures(&site_text.as_ref())
             .unwrap()
             .get(1)
             .unwrap()
@@ -84,14 +113,75 @@ impl BusInfo {
                     col.get(impacto_idx).unwrap_or(&"".to_string()).to_owned(),
                 ]
             })
+            .filter(|v| !v[0].is_empty() && !v[3].is_empty())
             .collect();
 
         println!("{:?}", schedule_vec);
+        schedule_vec
+    }
 
-        BusInfo {
-            current_schedule: schedule_vec,
-            previous_schedule: None,
+    // pub fn diff(&self) -> BusInfoDiff {
+    //     match self.previous_schedule {
+    //         Some(schedule) => {
+    //             if self.current_schedule.is_empty() {
+    //                 BusInfoDiff { new: None, updated: schedule }
+    //             } else {
+    //                 BusInfoDiff { new: (&self.current_schedule - &self.previous_schedule), updated: (&self.previous_schedule - self.current_schedule) }
+    //             }
+    //         }
+    //     }
+    // }
+
+    pub fn diff(&self) -> BusInfoDiff {
+        match &self.previous_schedule {
+            None => if self.current_schedule.is_empty() {
+                BusInfoDiff { new: None, updated: None, now_running: None }
+            } else {
+                BusInfoDiff { new: Some(self.current_schedule.clone()), updated: None, now_running: None }
+            },
+            Some(prev) => if self.current_schedule.is_empty() {
+                BusInfoDiff { new: None, updated: None, now_running: Some(prev.clone()) }
+            } else {
+                BusInfoDiff::new(self.current_schedule.clone(), self.previous_schedule.clone().unwrap())
+            }
         }
+    }
+
+    
+}
+
+pub struct BusInfoDiff {
+    pub new: Option<HashSet<Vec<String>>>,
+    pub updated: Option<HashSet<Vec<String>>>,
+    pub now_running: Option<HashSet<Vec<String>>>,
+}
+
+impl BusInfoDiff {
+    pub fn new(left: HashSet<Vec<String>>, right: HashSet<Vec<String>>) -> Self {
+            let mut new: HashSet<Vec<String>> = HashSet::new();
+            let mut updated: HashSet<Vec<String>> = HashSet::new();
+            let mut now_running: HashSet<Vec<String>> = HashSet::new();
+
+            for l_row in left.iter() {
+                let r_filtered = right.iter().filter(|v| (l_row[0] == v[0]) && (l_row[3] == v[3])).next();
+                match r_filtered {
+                    Some(v) => {
+                        if (l_row[1] != v[1]) || (l_row[2] != v[2]) || (l_row[4] != v[4]) {
+                            updated.insert(v.to_vec());
+                        }
+                    },
+                    None => { new.insert(l_row.to_vec()); }
+                }
+            }
+
+            for r_row in right.iter() {
+                let l_filtered = left.iter().filter(|v| (r_row[0] == v[0]) && (r_row[3] == v[3])).next();
+                match l_filtered {
+                    Some(_) => {},
+                    None => { now_running.insert(r_row.to_vec()); }
+                }
+            }
+            BusInfoDiff { new: Some(new), updated: Some(updated), now_running: Some(now_running) }
     }
 }
 

@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 reqwest = { version = "*", features = ["blocking"] }
 regex = "1.6.0"
-polars = { version = "*", features = ["json"] }
+toml = "*"
+serde_derive = "*"
 serde = "*"
