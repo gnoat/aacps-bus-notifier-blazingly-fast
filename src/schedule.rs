@@ -120,18 +120,6 @@ impl BusInfo {
         schedule_vec
     }
 
-    // pub fn diff(&self) -> BusInfoDiff {
-    //     match self.previous_schedule {
-    //         Some(schedule) => {
-    //             if self.current_schedule.is_empty() {
-    //                 BusInfoDiff { new: None, updated: schedule }
-    //             } else {
-    //                 BusInfoDiff { new: (&self.current_schedule - &self.previous_schedule), updated: (&self.previous_schedule - self.current_schedule) }
-    //             }
-    //         }
-    //     }
-    // }
-
     pub fn diff(&self) -> BusInfoDiff {
         match &self.previous_schedule {
             None => if self.current_schedule.is_empty() {
