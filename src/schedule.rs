@@ -146,6 +146,12 @@ impl BusInfo {
                         updated: None,
                         now_running: Some(prev.clone()),
                     }
+                } else if prev.is_empty() {
+                    BusInfoDiff {
+                        new: Some(self.current_schedule.clone()),
+                        updated: None,
+                        now_running: None,
+                    }
                 } else {
                     BusInfoDiff::new(
                         self.current_schedule.clone(),
@@ -157,7 +163,7 @@ impl BusInfo {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct BusInfoDiff {
     pub new: Option<HashSet<Vec<String>>>,
     pub updated: Option<HashSet<Vec<String>>>,
@@ -198,11 +204,24 @@ impl BusInfoDiff {
                     now_running.insert(r_row.to_vec());
                 }
             }
+
         }
         BusInfoDiff {
-            new: Some(new),
-            updated: Some(updated),
-            now_running: Some(now_running),
+            new: if new.is_empty() {
+                None
+            } else {
+                Some(new)
+            },
+            updated: if updated.is_empty() {
+                None
+            } else {
+                Some(updated)
+            },
+            now_running: if now_running.is_empty() {
+                None
+            } else {
+                Some(now_running)
+            },
         }
     }
 }
