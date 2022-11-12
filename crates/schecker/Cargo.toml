@@ -1,10 +1,9 @@
 [package]
-name = "bussy"
+name = "schecker"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 reqwest = { version = "*", features = ["blocking"] }
 regex = "1.6.0"
@@ -12,14 +11,4 @@ toml = "*"
 serde_derive = "*"
 serde = "*"
 
-[[bin]]
-path = "crates/schecker/src/main.rs"
-name = "schecker"
 
-[dependencies.schecker]
-path = "./crates/schecker"
-
-# [workspace]
-# members = [
-#     "crates/schecker"
-# ]

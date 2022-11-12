@@ -101,19 +101,12 @@ impl BusInfo {
             .as_str()
             .split("], [")
             .map(|entry| {
-                entry
+                permute(entry
                     .replace("[", "")
                     .replace("]", "")
                     .split("', '")
                     .map(|entry_col| entry_col.replace("'", ""))
-                    .collect::<Vec<String>>()
-            })
-            .map(|col| {
-                columns
-                    .clone()
-                    .into_iter()
-                    .map(|idx| col.get(idx).unwrap_or(&"".to_string()).to_owned())
-                    .collect::<Vec<String>>()
+                    .collect::<Vec<String>>(), &columns)
             })
             .filter(|v| !v[0].is_empty() && !v[3].is_empty())
             .collect();
@@ -123,6 +116,7 @@ impl BusInfo {
     }
 
     pub fn diff(&self) -> BusInfoDiff {
+        // Calculates the BusInfoDiff that details which type of message should be sent for each bus/school combo
         match &self.previous_schedule {
             None => {
                 if self.current_schedule.is_empty() {
@@ -206,6 +200,7 @@ impl BusInfoDiff {
             }
 
         }
+
         BusInfoDiff {
             new: if new.is_empty() {
                 None
@@ -226,6 +221,15 @@ impl BusInfoDiff {
     }
 }
 
+fn permute(v: Vec<String>, idx_map: &Vec<usize>) -> Vec<String> {
+    let mut permuted: Vec<String> = Vec::new();
+    for idx in idx_map.into_iter() {
+        // permuted.push(v[*idx].to_string());
+        permuted.push(v.get(*idx).unwrap_or(&"".to_string()).to_owned());
+    }
+
+    permuted
+}
 // pub struct ScheduleFrames {
 //     new: DataFrame,
 //     old: DataFrame,

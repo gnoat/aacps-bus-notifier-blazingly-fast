@@ -1,4 +1,4 @@
-use busnote::schedule::{BusInfo, BusInfoWebsite, BusInfoDiff};
+use schecker::schedule::{BusInfo, BusInfoWebsite, BusInfoDiff};
 use std::collections::HashSet;
 
 static TEST_REQUEST_TEXT: &str = r#"
