@@ -29,9 +29,13 @@ impl BusInfo {
         }
     }
 
-    pub fn update(&self, schedule_info: BusInfoWebsite) -> Self {
+    pub fn update(&self, schedule_info: Option<BusInfoWebsite>) -> Self {
         // Generate a new BusInfo struct that has updated info and current info
-        let current_schedule_text = match schedule_info {
+        let current_schedule_info = match &schedule_info {
+            Some(s) => s,
+            None => &self.schedule_info
+        };
+        let current_schedule_text = match current_schedule_info {
             BusInfoWebsite::Text(ref s) => s.to_string(),
             BusInfoWebsite::Url(ref url) => Self::request_schedule(&url).to_string(),
         };
