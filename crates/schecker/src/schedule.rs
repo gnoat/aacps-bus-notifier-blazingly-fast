@@ -29,9 +29,13 @@ impl BusInfo {
         }
     }
 
-    pub fn update(&self, schedule_info: BusInfoWebsite) -> Self {
+    pub fn update(&self, schedule_info: Option<BusInfoWebsite>) -> Self {
         // Generate a new BusInfo struct that has updated info and current info
-        let current_schedule_text = match schedule_info {
+        let current_schedule_info = match &schedule_info {
+            Some(s) => s,
+            None => &self.schedule_info
+        };
+        let current_schedule_text = match current_schedule_info {
             BusInfoWebsite::Text(ref s) => s.to_string(),
             BusInfoWebsite::Url(ref url) => Self::request_schedule(&url).to_string(),
         };
@@ -111,7 +115,7 @@ impl BusInfo {
             .filter(|v| !v[0].is_empty() && !v[3].is_empty())
             .collect();
 
-        println!("{:?}", schedule_vec);
+        println!("Read bus shortages: {:?}\n", schedule_vec);
         schedule_vec
     }
 
@@ -173,7 +177,7 @@ impl BusInfoDiff {
         for l_row in left.iter() {
             let r_filtered = right
                 .iter()
-                .filter(|v| (l_row[0] == v[0]) && (l_row[3] == v[3]))
+                .filter(|v| (l_row[0] == v[0]) && (l_row[3] == v[3]) && (l_row[2] == v[2]))
                 .next();
             match r_filtered {
                 Some(v) => {
@@ -190,7 +194,7 @@ impl BusInfoDiff {
         for r_row in right.iter() {
             let l_filtered = left
                 .iter()
-                .filter(|v| (r_row[0] == v[0]) && (r_row[3] == v[3]))
+                .filter(|v| (r_row[0] == v[0]) && (r_row[3] == v[3]) && (r_row[2] == v[2]))
                 .next();
             match l_filtered {
                 Some(_) => {}

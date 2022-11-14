@@ -227,7 +227,7 @@ fn schedule_diff_from_empty() {
     let empty_website = BusInfoWebsite::Text(TEST_REQUEST_TEXT_EMPTY.to_string());
     let empty_schedule = BusInfo::new(empty_website);
     let norm_website = BusInfoWebsite::Text(TEST_REQUEST_TEXT.to_string());
-    let updated_schedule = empty_schedule.update(norm_website);
+    let updated_schedule = empty_schedule.update(Some(norm_website));
     assert_eq!(updated_schedule.diff(), BusInfoDiff { new: Some(updated_schedule.current_schedule), updated: None, now_running: None });
 }
 
@@ -236,7 +236,7 @@ fn schedule_diff_to_empty() {
     let norm_website = BusInfoWebsite::Text(TEST_REQUEST_TEXT.to_string());
     let empty_website = BusInfoWebsite::Text(TEST_REQUEST_TEXT_EMPTY.to_string());
     let norm_schedule = BusInfo::new(norm_website);
-    let updated_schedule = norm_schedule.update(empty_website);
+    let updated_schedule = norm_schedule.update(Some(empty_website));
     assert_eq!(updated_schedule.diff(), BusInfoDiff { now_running: Some(updated_schedule.previous_schedule.unwrap()), updated: None, new: None });
 }
 
@@ -245,7 +245,7 @@ fn schedule_diff_mixed() {
     let norm_website = BusInfoWebsite::Text(TEST_REQUEST_TEXT.to_string());
     let empty_website = BusInfoWebsite::Text(TEST_REQUEST_TEXT_MULTIPLE.to_string());
     let norm_schedule = BusInfo::new(norm_website);
-    let updated_schedule = norm_schedule.update(empty_website);
+    let updated_schedule = norm_schedule.update(Some(empty_website));
     assert_eq!(updated_schedule.diff(), BusInfoDiff { now_running: Some(updated_schedule.previous_schedule.unwrap()), updated: None, new: Some(updated_schedule.current_schedule) });
 
 }
