@@ -247,5 +247,4 @@ fn schedule_diff_mixed() {
     let norm_schedule = BusInfo::new(norm_website);
     let updated_schedule = norm_schedule.update(Some(empty_website));
     assert_eq!(updated_schedule.diff(), BusInfoDiff { now_running: Some(updated_schedule.previous_schedule.unwrap()), updated: None, new: Some(updated_schedule.current_schedule) });
-
 }
