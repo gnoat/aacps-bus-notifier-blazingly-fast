@@ -10,6 +10,8 @@ fn main() {
         let bus_info = bus_info.update(None);
         let bus_diff = bus_info.diff();
         println!("New: {:?}\n\nUpdated: {:?}\n\nRemoved: {:?}\n", bus_diff.new, bus_diff.updated, bus_diff.now_running);
-        thread::sleep(time::Duration::from_secs(5));
+
+        // Wait one minute and then repull schedule and compare
+        thread::sleep(time::Duration::from_secs(60));
     }
 }
