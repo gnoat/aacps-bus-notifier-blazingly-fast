@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 axum = "*"
 tokio = { version = "*", features = ["full"] }
+sqlx-cli = "~0.6"
