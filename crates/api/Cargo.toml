@@ -8,4 +8,4 @@ edition = "2021"
 [dependencies]
 axum = "*"
 tokio = { version = "*", features = ["full"] }
-sqlx-cli = "~0.6"
+sqlx-cli = { version = "0.6.2", features = ["postgres"] }
