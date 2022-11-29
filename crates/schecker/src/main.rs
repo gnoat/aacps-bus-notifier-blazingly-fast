@@ -9,7 +9,10 @@ fn main() {
     loop {
         let bus_info = bus_info.update(None);
         let bus_diff = bus_info.diff();
-        println!("New: {:?}\n\nUpdated: {:?}\n\nRemoved: {:?}\n", bus_diff.new, bus_diff.updated, bus_diff.now_running);
+        println!(
+            "New: {:?}\n\nUpdated: {:?}\n\nRemoved: {:?}\n",
+            bus_diff.new, bus_diff.updated, bus_diff.now_running
+        );
 
         // Wait one minute and then repull schedule and compare
         thread::sleep(time::Duration::from_secs(60));

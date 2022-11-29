@@ -1,4 +1,4 @@
-use schecker::schedule::{BusInfo, BusInfoWebsite, BusInfoDiff};
+use schecker::schedule::{BusInfo, BusInfoDiff, BusInfoWebsite};
 use std::collections::HashSet;
 
 static TEST_REQUEST_TEXT: &str = r#"
@@ -219,7 +219,10 @@ r
 fn schedule_parsing_empty() {
     let website = BusInfoWebsite::Text(TEST_REQUEST_TEXT_EMPTY.to_string());
     let schedule = BusInfo::new(website);
-    assert_eq!(schedule.current_schedule, Vec::new().into_iter().collect::<HashSet<_>>());
+    assert_eq!(
+        schedule.current_schedule,
+        Vec::new().into_iter().collect::<HashSet<_>>()
+    );
 }
 
 #[test]
@@ -228,7 +231,14 @@ fn schedule_diff_from_empty() {
     let empty_schedule = BusInfo::new(empty_website);
     let norm_website = BusInfoWebsite::Text(TEST_REQUEST_TEXT.to_string());
     let updated_schedule = empty_schedule.update(Some(norm_website));
-    assert_eq!(updated_schedule.diff(), BusInfoDiff { new: Some(updated_schedule.current_schedule), updated: None, now_running: None });
+    assert_eq!(
+        updated_schedule.diff(),
+        BusInfoDiff {
+            new: Some(updated_schedule.current_schedule),
+            updated: None,
+            now_running: None
+        }
+    );
 }
 
 #[test]
@@ -237,7 +247,14 @@ fn schedule_diff_to_empty() {
     let empty_website = BusInfoWebsite::Text(TEST_REQUEST_TEXT_EMPTY.to_string());
     let norm_schedule = BusInfo::new(norm_website);
     let updated_schedule = norm_schedule.update(Some(empty_website));
-    assert_eq!(updated_schedule.diff(), BusInfoDiff { now_running: Some(updated_schedule.previous_schedule.unwrap()), updated: None, new: None });
+    assert_eq!(
+        updated_schedule.diff(),
+        BusInfoDiff {
+            now_running: Some(updated_schedule.previous_schedule.unwrap()),
+            updated: None,
+            new: None
+        }
+    );
 }
 
 #[test]
@@ -246,5 +263,12 @@ fn schedule_diff_mixed() {
     let empty_website = BusInfoWebsite::Text(TEST_REQUEST_TEXT_MULTIPLE.to_string());
     let norm_schedule = BusInfo::new(norm_website);
     let updated_schedule = norm_schedule.update(Some(empty_website));
-    assert_eq!(updated_schedule.diff(), BusInfoDiff { now_running: Some(updated_schedule.previous_schedule.unwrap()), updated: None, new: Some(updated_schedule.current_schedule) });
+    assert_eq!(
+        updated_schedule.diff(),
+        BusInfoDiff {
+            now_running: Some(updated_schedule.previous_schedule.unwrap()),
+            updated: None,
+            new: Some(updated_schedule.current_schedule)
+        }
+    );
 }
