@@ -3,8 +3,8 @@ use std::collections::HashSet;
 
 pub struct BusInfo {
     pub schedule_info: BusInfoWebsite,
-    pub current_schedule: HashSet<Vec<String>>,
-    pub previous_schedule: Option<HashSet<Vec<String>>>,
+    pub current_schedule: HashSet<[String; 6]>,
+    pub previous_schedule: Option<HashSet<[String; 6]>>,
 }
 
 #[derive(Clone, Debug)]
@@ -53,7 +53,7 @@ impl BusInfo {
             .unwrap_or("".to_string())
     }
 
-    fn extract_schedule<T: AsRef<str>>(site_text: T) -> HashSet<Vec<String>> {
+    fn extract_schedule<T: AsRef<str>>(site_text: T) -> HashSet<[String; 6]> {
         // Read the schedule table column order from the returned HTML
         let columns_vec: Vec<String> = Regex::new(r#"\{\s*"title":\s*"([a-zA-Z\s]+)"\s*}"#)
             .unwrap()
@@ -96,7 +96,7 @@ impl BusInfo {
         //     4) Schools
         //     5) Impact
         //     6) Impacto
-        let schedule_vec: HashSet<Vec<String>> = Regex::new(r"var dataArray =\s*\[(.*)\];")
+        let schedule_vec: HashSet<[String; 6]> = Regex::new(r"var dataArray =\s*\[(.*)\];")
             .unwrap()
             .captures(&site_text.as_ref())
             .unwrap()
@@ -163,16 +163,16 @@ impl BusInfo {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct BusInfoDiff {
-    pub new: Option<HashSet<Vec<String>>>,
-    pub updated: Option<HashSet<Vec<String>>>,
-    pub now_running: Option<HashSet<Vec<String>>>,
+    pub new: Option<HashSet<[String; 6]>>,
+    pub updated: Option<HashSet<[String; 6]>>,
+    pub now_running: Option<HashSet<[String; 6]>>,
 }
 
 impl BusInfoDiff {
-    pub fn new(left: HashSet<Vec<String>>, right: HashSet<Vec<String>>) -> Self {
-        let mut new: HashSet<Vec<String>> = HashSet::new();
-        let mut updated: HashSet<Vec<String>> = HashSet::new();
-        let mut now_running: HashSet<Vec<String>> = HashSet::new();
+    pub fn new(left: HashSet<[String; 6]>, right: HashSet<[String; 6]>) -> Self {
+        let mut new: HashSet<[String; 6]> = HashSet::new();
+        let mut updated: HashSet<[String; 6]> = HashSet::new();
+        let mut now_running: HashSet<[String; 6]> = HashSet::new();
 
         for l_row in left.iter() {
             let r_filtered = right
@@ -182,11 +182,11 @@ impl BusInfoDiff {
             match r_filtered {
                 Some(v) => {
                     if (l_row[1] != v[1]) || (l_row[2] != v[2]) || (l_row[4] != v[4]) {
-                        updated.insert(v.to_vec());
+                        updated.insert(v.to_owned());
                     }
                 }
                 None => {
-                    new.insert(l_row.to_vec());
+                    new.insert(l_row.to_owned());
                 }
             }
         }
@@ -199,7 +199,7 @@ impl BusInfoDiff {
             match l_filtered {
                 Some(_) => {}
                 None => {
-                    now_running.insert(r_row.to_vec());
+                    now_running.insert(r_row.to_owned());
                 }
             }
 
@@ -225,13 +225,21 @@ impl BusInfoDiff {
     }
 }
 
-fn permute(v: Vec<String>, idx_map: &Vec<usize>) -> Vec<String> {
-    let mut permuted: Vec<String> = Vec::new();
-    for idx in idx_map.into_iter() {
-        // permuted.push(v[*idx].to_string());
-        permuted.push(v.get(*idx).unwrap_or(&"".to_string()).to_owned());
-    }
-
-    permuted
+fn permute(v: Vec<String>, idx_map: &Vec<usize>) -> [String; 6] {
+//     let mut permuted: Vec<String> = Vec::new();
+//     for idx in idx_map.into_iter() {
+//         // permuted.push(v[*idx].to_string());
+//         permuted.push(v.get(*idx).unwrap_or(&"".to_string()).to_owned());
+//     }
+//
+//     permuted
+    [
+        v.get(idx_map[0]).unwrap_or(&"".to_string()).to_owned(),
+        v.get(idx_map[1]).unwrap_or(&"".to_string()).to_owned(),
+        v.get(idx_map[2]).unwrap_or(&"".to_string()).to_owned(),
+        v.get(idx_map[3]).unwrap_or(&"".to_string()).to_owned(),
+        v.get(idx_map[4]).unwrap_or(&"".to_string()).to_owned(),
+        v.get(idx_map[5]).unwrap_or(&"".to_string()).to_owned(),
+    ]
 }
 

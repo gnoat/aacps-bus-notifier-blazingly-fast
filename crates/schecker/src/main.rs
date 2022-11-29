@@ -3,7 +3,7 @@ use schecker::schedule;
 use std::{thread, time};
 
 fn main() {
-    let configs: Configs = Configs::new("defaults.toml");
+    let configs: Configs = Configs::new("../../defaults.toml");
     let bus_url = schedule::BusInfoWebsite::Url(configs.schedule_url);
     let bus_info = schedule::BusInfo::new(bus_url);
     loop {
