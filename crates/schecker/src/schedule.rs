@@ -104,14 +104,7 @@ impl BusInfo {
             .unwrap()
             .as_str()
             .split("], [")
-            .map(|entry| {
-                permute(entry
-                    .replace("[", "")
-                    .replace("]", "")
-                    .split("', '")
-                    .map(|entry_col| entry_col.replace("'", ""))
-                    .collect::<Vec<String>>(), &columns)
-            })
+            .map(|entry| entry.permutate(&columns))
             .filter(|v| !v[0].is_empty() && !v[3].is_empty())
             .collect();
 
@@ -225,21 +218,27 @@ impl BusInfoDiff {
     }
 }
 
-fn permute(v: Vec<String>, idx_map: &Vec<usize>) -> [String; 6] {
-//     let mut permuted: Vec<String> = Vec::new();
-//     for idx in idx_map.into_iter() {
-//         // permuted.push(v[*idx].to_string());
-//         permuted.push(v.get(*idx).unwrap_or(&"".to_string()).to_owned());
-//     }
-//
-//     permuted
-    [
-        v.get(idx_map[0]).unwrap_or(&"".to_string()).to_owned(),
-        v.get(idx_map[1]).unwrap_or(&"".to_string()).to_owned(),
-        v.get(idx_map[2]).unwrap_or(&"".to_string()).to_owned(),
-        v.get(idx_map[3]).unwrap_or(&"".to_string()).to_owned(),
-        v.get(idx_map[4]).unwrap_or(&"".to_string()).to_owned(),
-        v.get(idx_map[5]).unwrap_or(&"".to_string()).to_owned(),
-    ]
+trait PermutateCols {
+    fn permutate(&self, idx_map: &Vec<usize>) -> [String; 6];
+}
+
+impl PermutateCols for &str {
+    fn permutate(&self, idx_map: &Vec<usize>) -> [String; 6] {
+        let v: Vec<String> = self
+            .replace("[", "")
+            .replace("]", "")
+            .split("', '")
+            .map(|entry_col| entry_col.replace("'", ""))
+            .collect();
+
+        [
+            v.get(idx_map[0]).unwrap_or(&"".to_string()).to_owned(),
+            v.get(idx_map[1]).unwrap_or(&"".to_string()).to_owned(),
+            v.get(idx_map[2]).unwrap_or(&"".to_string()).to_owned(),
+            v.get(idx_map[3]).unwrap_or(&"".to_string()).to_owned(),
+            v.get(idx_map[4]).unwrap_or(&"".to_string()).to_owned(),
+            v.get(idx_map[5]).unwrap_or(&"".to_string()).to_owned(),
+        ]
+    }
 }
 
